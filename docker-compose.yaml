@@ -34,6 +34,7 @@ services:
     volumes:
       - .:/app
     environment:
+      - APP_ENV=development
       - SERVICE_NAME=pricewatch-api
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
       - DATABASE_URL=postgres://user:password@postgres:5432/pricewatch_db

@@ -39,7 +39,8 @@ class Product(BaseModel):
     class Meta:
         indexes = [
             models.Index(
-                fields=["is_deleted", "url"],
-                name="idx_active_url",
+                fields=["url"],
+                name="idx_active_product_url",
+                condition=models.Q(is_deleted=False),
             ),
         ]
