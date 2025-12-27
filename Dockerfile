@@ -31,4 +31,4 @@ ENV PYTHONPATH="/app"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-CMD ["gunicorn", "src.core.wsgi:application", "--bind", "0.0.0.0:8000", "-c", "gunicorn.conf.py", "-w", "4"]
+CMD ["gunicorn", "src.core.wsgi:application", "--bind", "0.0.0.0:8000", "-c", "gunicorn.conf.py", "--workers", "1", "--reload", "--reload-engine", "inotify"]
