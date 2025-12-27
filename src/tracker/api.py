@@ -4,6 +4,8 @@ import structlog
 from django.core.cache import cache
 from django.db import connections
 from ninja import NinjaAPI, Router
+from opentelemetry import trace
+from opentelemetry.trace import StatusCode
 
 from src.tracker.models import Product
 from src.tracker.schema import ProductIn, ProductOut
@@ -65,6 +67,31 @@ def readiness(request):
 @api.get("/health")
 def health_alias(request):
     return liveness(request)
+
+
+@api.exception_handler(Exception)
+def on_exception(request, exc):
+    span = trace.get_current_span()
+
+    # Mark the Trace as "Error" so it turns red in the UI
+    span.set_status(StatusCode.ERROR, description=str(exc))
+    span.record_exception(exc)
+
+    logger.error(
+        "unhandled_api_exception",
+        path=request.path,
+        error=str(exc),
+        exc_info=True,
+    )
+
+    return api.create_response(
+        request,
+        {
+            "error": "Internal Server Error",
+            "trace_id": format(span.get_span_context().trace_id, "032x"),
+        },
+        status=500,
+    )
 
 
 @v1_router.post("/products", response=ProductOut)

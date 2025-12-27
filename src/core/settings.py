@@ -12,6 +12,10 @@ SERVICE_NAME = env(
     "SERVICE_NAME",
     default="pricewatch-api",
 )
+APP_ENV = env(
+    "APP_ENV",
+    default="development",
+)
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env(
@@ -36,15 +40,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Third Party
+    "django_structlog",
     "django_dramatiq",
     # Apps
     "src.tracker",
 ]
 
 MIDDLEWARE = [
-    # Observabiklity middleware
-    # MUST BE FIRST
-    "src.tracker.middleware.ObservabilityMiddleware",
+    "django_structlog.middlewares.RequestMiddleware",
+    "src.tracker.middleware.TraceHeaderMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -149,7 +153,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "json_formatter": {
+        "json": {
             "()": structlog.stdlib.ProcessorFormatter,
             "processor": structlog.processors.JSONRenderer(),
         },
@@ -157,20 +161,18 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "json_formatter",
+            "formatter": "json",
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "CRITICAL",
+            "propagate": False,
         },
     },
     "root": {
         "handlers": ["console"],
         "level": "INFO",
     },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": False,
-        },
-    },
 }
-
-APPEND_SLASH = False

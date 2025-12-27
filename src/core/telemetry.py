@@ -6,7 +6,7 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.instrumentation.django import DjangoInstrumentor
 from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.resources import DEPLOYMENT_ENVIRONMENT, SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -21,8 +21,22 @@ def add_otel_context(_, __, event_dict):
     return event_dict
 
 
+def filter_request_logs(_, __, event_dict):
+    if event_dict.get("event") in ["request_started", "request_finished"]:
+        raise structlog.DropEvent
+    return event_dict
+
+
 def init_telemetry(service_name: str):
-    resource = Resource.create({SERVICE_NAME: service_name})
+    resource = Resource.create(
+        {
+            SERVICE_NAME: service_name,
+            DEPLOYMENT_ENVIRONMENT: os.getenv("APP_ENV", "development"),
+            # TODO: We should set this up to read from uv version
+            # and for every update bump the uv version and use it to create tags
+            "service.version": "1.0.0",
+        }
+    )
     provider = TracerProvider(resource=resource)
 
     exporter = OTLPSpanExporter(
@@ -43,7 +57,8 @@ def init_telemetry(service_name: str):
             structlog.processors.add_log_level,
             structlog.processors.TimeStamper(fmt="iso"),
             add_otel_context,
-            structlog.processors.JSONRenderer(),
+            filter_request_logs,
+            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
-        logger_factory=structlog.PrintLoggerFactory(),
+        logger_factory=structlog.stdlib.LoggerFactory(),
     )
