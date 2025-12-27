@@ -55,9 +55,11 @@ def init_telemetry(service_name: str):
         processors=[
             structlog.contextvars.merge_contextvars,
             structlog.processors.add_log_level,
+            structlog.processors.format_exc_info,
             structlog.processors.TimeStamper(fmt="iso"),
             add_otel_context,
             filter_request_logs,
+            structlog.processors.UnicodeDecoder(),
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),

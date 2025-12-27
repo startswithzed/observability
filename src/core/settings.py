@@ -149,19 +149,23 @@ DRAMATIQ_BROKER = {
 
 DRAMATIQ_AUTODISCOVER_MODULES = ["tasks"]
 
+LOG_JSON = env.bool("LOG_JSON", default=True)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "json": {
+        "structlog": {
             "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.processors.JSONRenderer(),
+            "processor": structlog.processors.JSONRenderer()
+            if LOG_JSON
+            else structlog.dev.ConsoleRenderer(),
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "json",
+            "formatter": "structlog",
         },
     },
     "loggers": {
