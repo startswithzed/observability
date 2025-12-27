@@ -4,4 +4,23 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "dj-database-url>=3.0.1",
+    "django-dramatiq>=0.15.0",
+    "django-environ>=0.12.0",
+    "django-ninja>=1.5.1",
+    "dramatiq[prometheus,rabbitmq]>=2.0.0",
+    "gunicorn>=23.0.0",
+    "opentelemetry-api>=1.39.1",
+    "opentelemetry-exporter-otlp>=1.39.1",
+    "opentelemetry-instrumentation-django>=0.60b1",
+    "opentelemetry-instrumentation-logging>=0.60b1",
+    "opentelemetry-instrumentation-psycopg>=0.60b1",
+    "opentelemetry-instrumentation-redis>=0.60b1",
+    "opentelemetry-instrumentor-dramatiq>=0.1.2",
+    "opentelemetry-sdk>=1.39.1",
+    "psycopg[c]>=3.3.2",
+    "redis>=7.1.0",
+    "structlog>=25.5.0",
+    "uuid6>=2025.0.1",
+]
