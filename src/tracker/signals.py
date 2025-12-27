@@ -1,7 +1,7 @@
 import structlog
 from django.dispatch import receiver
 from django_structlog.signals import bind_extra_request_metadata
-from opentelemetry import trace
+from opentelemetry import baggage, trace
 
 
 @receiver(bind_extra_request_metadata)
@@ -15,4 +15,11 @@ def add_otel_trace_id(request, logger, **kwargs):
 
     if span_context.is_valid:
         trace_id = format(span_context.trace_id, "032x")
-        structlog.contextvars.bind_contextvars(trace_id=trace_id)
+
+        baggage.set_baggage("tenant_id", "default-org")
+
+        # structlog.contextvars.bind_contextvars(trace_id=trace_id)
+        structlog.contextvars.bind_contextvars(
+            trace_id=trace_id,
+            tenant_id="default-org",
+        )
