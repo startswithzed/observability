@@ -4,7 +4,7 @@ import structlog
 from django.core.cache import cache
 from django.db import connections
 from ninja import NinjaAPI, Router
-from opentelemetry import trace
+from opentelemetry import metrics, trace
 from opentelemetry.trace import StatusCode
 
 from src.tracker.models import Product
@@ -12,6 +12,13 @@ from src.tracker.schema import ProductIn, ProductOut
 
 api = NinjaAPI(title="PriceWatch API")
 logger = structlog.get_logger()
+meter = metrics.get_meter("tracker.api")
+
+product_created_counter = meter.create_counter(
+    name="products_created_total",
+    description="Total number of products created through the API",
+    unit="1",
+)
 
 v1_router = Router()
 
@@ -97,6 +104,7 @@ def on_exception(request, exc):
 @v1_router.post("/products", response=ProductOut)
 def create_product(request, data: ProductIn):
     product = Product.objects.create(**data.dict())
+    product_created_counter.add(1, {"tenant_id": "default-org"})
     logger.info(
         "product_created",
         product_id=str(product.id),

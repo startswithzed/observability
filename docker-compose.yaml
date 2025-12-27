@@ -28,6 +28,7 @@ services:
     command: ["--config=/etc/otel-config.yaml"]
     ports:
       - "4317:4317"
+      - "8889:8889"
 
   api:
     build: .

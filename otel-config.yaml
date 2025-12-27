@@ -13,10 +13,8 @@ exporters:
   # Export to the console (Docker logs) so we can see the trace data
   debug:
     verbosity: detailed
-
-#   # Future: Add Prometheus/Jaeger exporters here
-#   # prometheus:
-#   #   endpoint: "0.0.0.0:8889"
+  prometheus:
+    endpoint: "0.0.0.0:8889"
 
 service:
   pipelines:
@@ -27,4 +25,4 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [debug]
+      exporters: [prometheus, debug]
