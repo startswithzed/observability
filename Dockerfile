@@ -37,4 +37,4 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Switch to non-root user
 USER appuser
 
-CMD ["gunicorn", "src.core.wsgi:application", "--bind", "0.0.0.0:8000", "-c", "gunicorn.conf.py", "--workers", "1", "--reload", "--reload-engine", "inotify"]
+CMD ["gunicorn", "src.core.wsgi:application", "--bind", "0.0.0.0:8000", "-c", "src/gunicorn.conf.py", "--workers", "1", "--reload", "--reload-engine", "inotify"]

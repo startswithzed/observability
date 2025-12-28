@@ -3,7 +3,9 @@ import sys
 
 from src.core.telemetry import init_telemetry
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "src.core.settings")
 
