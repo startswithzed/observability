@@ -19,17 +19,52 @@ services:
     image: redis:8-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
 
   rabbitmq:
     image: rabbitmq:4.2.2-management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
+      - "15692:15692"
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running"]
       interval: 5s
       timeout: 5s
       retries: 5
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"
+      - "4317"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/dashboards
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    depends_on:
+      - prometheus
+      - jaeger
+
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -39,6 +74,18 @@ services:
     ports:
       - "4317:4317"
       - "8889:8889"
+    depends_on:
+      - jaeger
+      - prometheus
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://user:password@postgres:5432/pricewatch_db?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres
 
   api:
     build: .
@@ -93,3 +140,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:
