@@ -36,11 +36,14 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
-  jaeger:
-    image: jaegertracing/all-in-one:latest
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml
     ports:
-      - "16686:16686"
-      - "4317"
+      - "3200:3200" 
+      - "4317"    
 
   prometheus:
     image: prom/prometheus:latest
@@ -63,7 +66,7 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
     depends_on:
       - prometheus
-      - jaeger
+      - tempo
 
 
   otel-collector:
@@ -75,7 +78,7 @@ services:
       - "4317:4317"
       - "8889:8889"
     depends_on:
-      - jaeger
+      - tempo
       - prometheus
 
   postgres-exporter:

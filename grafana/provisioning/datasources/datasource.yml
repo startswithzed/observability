@@ -12,11 +12,11 @@ datasources:
     # We force a specific UID so your dashboard JSON always finds it
     uid: prometheus_datasource 
 
-  - name: Jaeger
-    type: jaeger
+  - name: Tempo
+    type: tempo
     access: proxy
     orgId: 1
-    url: http://jaeger:16686
+    url: http://tempo:3200
     version: 1
     editable: true
-    uid: jaeger_datasource
+    uid: tempo_datasource
