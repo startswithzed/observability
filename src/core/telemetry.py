@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import structlog
 from opentelemetry import metrics, trace
@@ -10,7 +11,12 @@ from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.sdk.resources import DEPLOYMENT_ENVIRONMENT, SERVICE_NAME, Resource
+from opentelemetry.sdk.resources import (
+    DEPLOYMENT_ENVIRONMENT,
+    SERVICE_INSTANCE_ID,
+    SERVICE_NAME,
+    Resource,
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry_instrumentor_dramatiq import DramatiqInstrumentor
@@ -43,6 +49,7 @@ def init_telemetry(service_name: str):
     resource = Resource.create(
         {
             SERVICE_NAME: service_name,
+            SERVICE_INSTANCE_ID: str(uuid.uuid4()),
             DEPLOYMENT_ENVIRONMENT: os.getenv("APP_ENV", "development"),
             # TODO: We should set this up to read from uv version
             # and for every update bump the uv version and use it to create tags

@@ -138,7 +138,9 @@ DRAMATIQ_BROKER = {
         ),
     },
     "MIDDLEWARE": [
-        # "dramatiq.middleware.Prometheus", FIXME: Prometheus middleware is not working
+        # We are not using this because it requires prometheus to scrape from a metrics server
+        # instead of using our collector exporter setup to push metrics     
+        # "dramatiq.middleware.Prometheus",
         "dramatiq.middleware.AgeLimit",
         "dramatiq.middleware.TimeLimit",
         "dramatiq.middleware.Callbacks",
