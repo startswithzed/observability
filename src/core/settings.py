@@ -180,6 +180,10 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "structlog",
         },
+        "otlp": {
+            "class": "src.core.telemetry.OTLPLogHandler",
+            "level": "INFO",
+        },
     },
     "loggers": {
         "django.request": {
@@ -194,7 +198,7 @@ LOGGING = {
         },
     },
     "root": {
-        "handlers": ["console"],
+        "handlers": ["console", "otlp"],
         "level": "INFO",
     },
 }

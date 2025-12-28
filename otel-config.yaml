@@ -8,19 +8,28 @@ receivers:
 
 processors:
   batch:
+  resource:
+    attributes:
+      - action: insert
+        key: loki.resource.labels
+        value: "service.name,service.namespace,deployment.environment"
+
 
 exporters:
-  # Export to the console (Docker logs) so we can see the trace data
-  debug:
-    verbosity: detailed
-  prometheus:
-    endpoint: "0.0.0.0:8889"
-    resource_to_telemetry_conversion:
-      enabled: true
   otlp/tempo:
     endpoint: "tempo:4317"
     tls:
       insecure: true
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    resource_to_telemetry_conversion:
+      enabled: true
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+  debug:
+    verbosity: detailed
 
 service:
   pipelines:
@@ -32,3 +41,7 @@ service:
       receivers: [otlp]
       processors: [batch]
       exporters: [prometheus, debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/loki, debug]

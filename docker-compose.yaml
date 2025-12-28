@@ -68,6 +68,15 @@ services:
       - prometheus
       - tempo
 
+  loki:
+    image: grafana/loki:latest
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/loki-config.yaml
+      - loki_data:/loki
+    ports:
+      - "3100:3100"
+
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -135,3 +144,4 @@ volumes:
   rabbitmq_data:
   prometheus_data:
   grafana_data:
+  loki_data:  
