@@ -3,6 +3,7 @@ from pathlib import Path
 import dj_database_url
 import environ
 import structlog
+from corsheaders.defaults import default_headers
 
 env = environ.Env()
 
@@ -32,6 +33,13 @@ ALLOWED_HOSTS = env.list(
     default=["*"],
 )
 
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_EXPOSE_HEADERS = ["x-trace-id"]
+CORS_ALLOW_HEADERS = (
+    *default_headers,
+    "x-trace-id",
+)
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third Party
     "django_structlog",
+    "corsheaders",
     "django_dramatiq",
     # Apps
     "src.tracker",
@@ -48,6 +57,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django_structlog.middlewares.RequestMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "src.tracker.middleware.TraceHeaderMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -139,7 +149,7 @@ DRAMATIQ_BROKER = {
     },
     "MIDDLEWARE": [
         # We are not using this because it requires prometheus to scrape from a metrics server
-        # instead of using our collector exporter setup to push metrics     
+        # instead of using our collector exporter setup to push metrics
         # "dramatiq.middleware.Prometheus",
         "dramatiq.middleware.AgeLimit",
         "dramatiq.middleware.TimeLimit",
