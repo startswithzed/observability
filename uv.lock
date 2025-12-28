@@ -303,6 +303,7 @@ dependencies = [
     { name = "opentelemetry-exporter-otlp" },
     { name = "opentelemetry-instrumentation-django" },
     { name = "opentelemetry-instrumentation-logging" },
+    { name = "opentelemetry-instrumentation-pika" },
     { name = "opentelemetry-instrumentation-psycopg" },
     { name = "opentelemetry-instrumentation-redis" },
     { name = "opentelemetry-instrumentor-dramatiq" },
@@ -327,6 +328,7 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp", specifier = ">=1.39.1" },
     { name = "opentelemetry-instrumentation-django", specifier = ">=0.60b1" },
     { name = "opentelemetry-instrumentation-logging", specifier = ">=0.60b1" },
+    { name = "opentelemetry-instrumentation-pika", specifier = ">=0.60b1" },
     { name = "opentelemetry-instrumentation-psycopg", specifier = ">=0.60b1" },
     { name = "opentelemetry-instrumentation-redis", specifier = ">=0.60b1" },
     { name = "opentelemetry-instrumentor-dramatiq", specifier = ">=0.1.2" },
@@ -468,6 +470,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/60/a6/4515895b383113677fd2ad21813df5e56108a2df14ebb7916c962c9a0234/opentelemetry_instrumentation_logging-0.60b1.tar.gz", hash = "sha256:98f4b9c7aeb9314a30feee7c002c7ea9abea07c90df5f97fb058b850bc45b89a", size = 9968, upload-time = "2025-12-11T13:37:03.974Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/f9/8a4ce3901bc52277794e4b18c4ac43dc5929806eff01d22812364132f45f/opentelemetry_instrumentation_logging-0.60b1-py3-none-any.whl", hash = "sha256:f2e18cbc7e1dd3628c80e30d243897fdc93c5b7e0c8ae60abd2b9b6a99f82343", size = 12577, upload-time = "2025-12-11T13:36:08.123Z" },
+]
+
+[[package]]
+name = "opentelemetry-instrumentation-pika"
+version = "0.60b1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "packaging" },
+    { name = "wrapt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c9/51/c070b6a332007089b3251869d93ef494e0f36401b8205952fcef7d7f4ea0/opentelemetry_instrumentation_pika-0.60b1.tar.gz", hash = "sha256:71eac891d742d196f2309e328e31fd57bb8aa72293b21c71b8d9133690a21422", size = 13308, upload-time = "2025-12-11T13:37:05.904Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fe/15/1d3cf0541d3147e4853a3afeee99948f90299c9fa112bed293340b356e2f/opentelemetry_instrumentation_pika-0.60b1-py3-none-any.whl", hash = "sha256:12c94bc4ccfc47a93a36bea8753aeb013155a96029a61ae4dedddef4a56054fd", size = 13736, upload-time = "2025-12-11T13:36:11.425Z" },
 ]
 
 [[package]]

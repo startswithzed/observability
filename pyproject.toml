@@ -17,6 +17,7 @@ dependencies = [
     "opentelemetry-exporter-otlp>=1.39.1",
     "opentelemetry-instrumentation-django>=0.60b1",
     "opentelemetry-instrumentation-logging>=0.60b1",
+    "opentelemetry-instrumentation-pika>=0.60b1",
     "opentelemetry-instrumentation-psycopg>=0.60b1",
     "opentelemetry-instrumentation-redis>=0.60b1",
     "opentelemetry-instrumentor-dramatiq>=0.1.2",

@@ -7,6 +7,11 @@ services:
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d pricewatch_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -16,10 +21,15 @@ services:
       - "6379:6379"
 
   rabbitmq:
-    image: rabbitmq:4.2.2-management
+    image: rabbitmq:4.2.2-management-alpine
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
@@ -40,15 +50,46 @@ services:
       - SERVICE_NAME=pricewatch-api
       - DJANGO_DEBUG=True
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_PYTHON_LOG_CORRELATION=true
       - DATABASE_URL=postgres://user:password@postgres:5432/pricewatch_db
       - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-      - otel-collector
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
+  worker:
+    build: .
+    command: python src/manage.py rundramatiq
+    volumes:
+      - .:/app
+    environment:
+      - LOG_JSON=False
+      - APP_ENV=development
+      - SERVICE_NAME=pricewatch-worker
+      - DJANGO_DEBUG=True
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - OTEL_PYTHON_LOG_CORRELATION=true
+      - DATABASE_URL=postgres://user:password@postgres:5432/pricewatch_db
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+
 volumes:
   postgres_data:

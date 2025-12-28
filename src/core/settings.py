@@ -134,7 +134,7 @@ DRAMATIQ_BROKER = {
     "OPTIONS": {
         "url": env(
             "RABBITMQ_URL",
-            default="amqp://guest:guest@rabbitmq:5672//",
+            default="amqp://guest:guest@rabbitmq:5672/",
         ),
     },
     "MIDDLEWARE": [
@@ -144,6 +144,7 @@ DRAMATIQ_BROKER = {
         "dramatiq.middleware.Callbacks",
         "dramatiq.middleware.Retries",
         "django_dramatiq.middleware.DbConnectionsMiddleware",
+        "src.tracker.dramatiq_telemetry.DramatiqWorkerTelemetry",
     ],
 }
 
@@ -172,6 +173,11 @@ LOGGING = {
         "django.request": {
             "handlers": ["console"],
             "level": "CRITICAL",
+            "propagate": False,
+        },
+        "pika": {
+            "handlers": ["console"],
+            "level": "WARNING",
             "propagate": False,
         },
     },

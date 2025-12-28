@@ -5,6 +5,7 @@ from opentelemetry import metrics, trace
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.django import DjangoInstrumentor
+from opentelemetry.instrumentation.pika import PikaInstrumentor
 from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
@@ -12,6 +13,9 @@ from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import DEPLOYMENT_ENVIRONMENT, SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry_instrumentor_dramatiq import DramatiqInstrumentor
+
+_IS_INITIALIZED = False
 
 
 def add_otel_context(_, __, event_dict):
@@ -31,6 +35,11 @@ def filter_request_logs(_, __, event_dict):
 
 
 def init_telemetry(service_name: str):
+    global _IS_INITIALIZED
+    if _IS_INITIALIZED:
+        # We only want to initialize once per process
+        return
+
     resource = Resource.create(
         {
             SERVICE_NAME: service_name,
@@ -40,32 +49,36 @@ def init_telemetry(service_name: str):
             "service.version": "1.0.0",
         }
     )
-    provider = TracerProvider(resource=resource)
 
     endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://otel-collector:4317")
-    exporter = OTLPSpanExporter(
+
+    # Tracing Setup
+    tracer_provider = TracerProvider(resource=resource)
+    span_exporter = OTLPSpanExporter(
         endpoint=endpoint,
         insecure=True,
     )
-    provider.add_span_processor(BatchSpanProcessor(exporter))
-    trace.set_tracer_provider(provider)
+    tracer_provider.add_span_processor(BatchSpanProcessor(span_exporter))
+    trace.set_tracer_provider(tracer_provider)
 
-    metric_reader = PeriodicExportingMetricReader(
-        OTLPMetricExporter(
-            endpoint=endpoint,
-            insecure=True,
-        )
+    # Metrics Setup
+    metrics_exporter = OTLPMetricExporter(
+        endpoint=endpoint,
+        insecure=True,
     )
+    metric_reader = PeriodicExportingMetricReader(metrics_exporter)
     meter_provider = MeterProvider(
         resource=resource,
         metric_readers=[metric_reader],
     )
     metrics.set_meter_provider(meter_provider)
 
-    # TODO: Don't we need dramatiq and rabbitmq instrumentation here?
+    # OTEL instrumentations
     DjangoInstrumentor().instrument()
-    PsycopgInstrumentor().instrument()
+    PsycopgInstrumentor().instrument(enable_commenter=True)
     RedisInstrumentor().instrument()
+    PikaInstrumentor().instrument()
+    DramatiqInstrumentor().instrument()
 
     structlog.configure(
         processors=[
@@ -80,3 +93,5 @@ def init_telemetry(service_name: str):
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
     )
+
+    _IS_INITIALIZED = True

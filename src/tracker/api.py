@@ -6,13 +6,16 @@ from django.db import connections
 from ninja import NinjaAPI, Router
 from opentelemetry import metrics, trace
 from opentelemetry.trace import StatusCode
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 from src.tracker.models import Product
 from src.tracker.schema import ProductIn, ProductOut
+from src.tracker.tasks import update_product_price
 
 api = NinjaAPI(title="PriceWatch API")
 logger = structlog.get_logger()
 meter = metrics.get_meter("tracker.api")
+propagator = TraceContextTextMapPropagator()
 
 product_created_counter = meter.create_counter(
     name="products_created_total",
@@ -105,6 +108,16 @@ def on_exception(request, exc):
 def create_product(request, data: ProductIn):
     product = Product.objects.create(**data.dict())
     product_created_counter.add(1, {"tenant_id": "default-org"})
+
+    # --- TRIGGER WORKER WITH TRACE CONTEXT ---
+    # 1. Create a 'carrier' dictionary
+    carrier = {}
+    # 2. Inject current trace context into the carrier
+    propagator.inject(carrier=carrier)
+
+    # 3. Send to Dramatiq
+    update_product_price.send(str(product.id), carrier)
+
     logger.info(
         "product_created",
         product_id=str(product.id),
