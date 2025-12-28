@@ -3,6 +3,7 @@ import time
 
 import dramatiq
 import structlog
+from django.core.cache import cache
 from opentelemetry import metrics, trace
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
@@ -79,6 +80,9 @@ def update_product_price(
             product_price_update_counter.add(1, {"status": "success"})
 
             Product.objects.filter(id=product_id).update(target_price=new_price)
+
+            cache_key = f"product:{product_id}"
+            cache.delete(cache_key)
 
             logger.info(
                 "product_price_updated",

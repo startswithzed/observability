@@ -1,4 +1,5 @@
 from typing import List
+from uuid import UUID
 
 import structlog
 from django.core.cache import cache
@@ -14,12 +15,24 @@ from src.tracker.tasks import update_product_price
 
 api = NinjaAPI(title="PriceWatch API")
 logger = structlog.get_logger()
-meter = metrics.get_meter("tracker.api")
+meter = metrics.get_meter("pricewatch-api")
 propagator = TraceContextTextMapPropagator()
 
 product_created_counter = meter.create_counter(
     name="products_created_total",
     description="Total number of products created through the API",
+    unit="1",
+)
+
+cache_hits_counter = meter.create_counter(
+    name="product_cache_hits_total",
+    description="Number of times product data was found in Redis",
+    unit="1",
+)
+
+cache_misses_counter = meter.create_counter(
+    name="product_cache_misses_total",
+    description="Number of times product data had to be fetched from DB",
     unit="1",
 )
 
@@ -129,3 +142,31 @@ def create_product(request, data: ProductIn):
 @v1_router.get("/products", response=List[ProductOut])
 def list_products(request):
     return Product.objects.all()
+
+
+@v1_router.get("/products/{product_id}", response=ProductOut)
+def get_product(
+    request,
+    product_id: UUID,
+):
+    cache_key = f"product:{product_id}"
+    cached_product = cache.get(cache_key)
+
+    if cached_product:
+        cache_hits_counter.add(1, {"service": "pricewatch-api"})
+        logger.info("product_cache_hit", product_id=product_id)
+        return cached_product
+
+    try:
+        product = Product.objects.get(id=product_id)
+        cache_misses_counter.add(1, {"service": "pricewatch-api"})
+        cache.set(cache_key, product, timeout=300)
+
+        logger.info("product_cache_miss", product_id=product_id)
+        return product
+    except Product.DoesNotExist:  # type: ignore[unresolved-attribute]
+        return api.create_response(
+            request,
+            {"error": "Not Found"},
+            status=404,
+        )
