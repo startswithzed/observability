@@ -94,16 +94,10 @@ services:
     build: .
     volumes:
       - .:/app
+    env_file:
+      - .env
     environment:
-      - LOG_JSON=False
-      - APP_ENV=development
       - SERVICE_NAME=pricewatch-api
-      - DJANGO_DEBUG=True
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-      - OTEL_PYTHON_LOG_CORRELATION=true
-      - DATABASE_URL=postgres://user:password@postgres:5432/pricewatch_db
-      - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     ports:
       - "8000:8000"
     depends_on:
@@ -121,16 +115,10 @@ services:
     command: python src/manage.py rundramatiq --watch src
     volumes:
       - .:/app
+    env_file:
+      - .env
     environment:
-      - LOG_JSON=False
-      - APP_ENV=development
       - SERVICE_NAME=pricewatch-worker
-      - DJANGO_DEBUG=True
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
-      - OTEL_PYTHON_LOG_CORRELATION=true
-      - DATABASE_URL=postgres://user:password@postgres:5432/pricewatch_db
-      - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
       postgres:
         condition: service_healthy

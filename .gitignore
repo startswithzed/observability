@@ -11,3 +11,6 @@ wheels/
 
 todo.md
 .DS_Store
+
+# Environment Variables
+.env
