@@ -2,10 +2,29 @@
 __pycache__/
 *.pyc
 .git/
+.gitignore
 .env
+.env.example
 static/
 media/
 build/
 dist/
 .uv/
 *.log
+.DS_Store
+.vscode/
+.idea/
+
+# Docker & Build
+Dockerfile
+docker-compose.yaml
+Makefile
+
+# Documentation
+*.md
+
+# Observability Configs (mounted to other containers)
+grafana/
+otel-config.yaml
+prometheus.yml
+tempo.yaml
